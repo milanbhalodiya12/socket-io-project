@@ -1,0 +1,589 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    
+</head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js">
+
+</script>
+<script>
+   var socket = io();
+    var user;
+
+    function setUserName() {
+        if (document.getElementById('name').value == '') {
+            alert('please enter your name !');
+        } else {
+            socket.emit('setUserName', document.getElementById('name').value);
+        }
+    }
+
+    socket.on('userExists', function (data) {
+        document.getElementById('exitsts-error').innerHTML = data;
+    });
+
+    socket.on('setUser', function (data) {
+        user = data.username;
+        document.getElementById('new-user-form').innerHTML =
+            '<input type="text" id="message">\
+        <button type="button" onclick="sendMessage()">Send</button>\
+        <div id="message-container"></div>';
+    });
+
+    function sendMessage() {
+        var message = document.getElementById('message').value;
+        if (message !== '') {
+            document.getElementById('message').value = '';
+            socket.emit('msg', { message: message, user: user });
+        }
+    }
+
+    socket.on('newmsg', function (data) {
+        if (user) {
+            document.getElementById('message-container').innerHTML +=
+                '<div>\
+                <b>' + data.user + '</b>: ' + data.message + '\
+            </div>';
+        }
+    });
+
+</script>
+
+<body>
+    <h1>Group chat application</h1>
+    <div id="new-user-form">
+        <div id="exitsts-error" style="color: red;"></div>
+        <input type="text" id="name" name="name" placeholder="Enter your name">
+        <button type="submit" onclick="setUserName()">Chat with users</button>
+    </div>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --secondary-color: #546e7a;
+            --accent-color: #43a047;
+            --background-color: #f5f5f5;
+            --card-color: #ffffff;
+            --text-color: #212121;
+            --light-text: #757575;
+            --border-color: #e0e0e0;
+            --sent-msg-bg: #e3f2fd;
+            --received-msg-bg: #f1f8e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .login-container {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            margin: auto;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .chat-container {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: var(--card-color);
+            overflow: hidden;
+        }
+
+        .welcome-banner {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .online-users {
+            padding: 0.5rem 1rem;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background-image: linear-gradient(to bottom, rgba(230,230,230,0.1) 0%, rgba(230,230,230,0.2) 100%);
+        }
+
+        .message-item {
+            margin-bottom: 1rem;
+            max-width: 80%;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message-item.sent {
+            margin-left: auto;
+        }
+
+        .message-bubble {
+            padding: 0.8rem 1rem;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .sent .message-bubble {
+            background-color: var(--sent-msg-bg);
+            border-bottom-right-radius: 4px;
+        }
+
+        .received .message-bubble {
+            background-color: var(--received-msg-bg);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+
+        .username {
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: var(--light-text);
+        }
+
+        .system-message {
+            text-align: center;
+            margin: 0.8rem 0;
+            font-size: 0.85rem;
+            color: var(--light-text);
+            font-style: italic;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            outline: none;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .send-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover {
+            background-color: #1565c0;
+            transform: scale(1.05);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .username-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .join-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 24px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .join-button:hover {
+            background-color: #1565c0;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #f44336;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .connection-info {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            font-size: 0.8rem;
+            color: var(--light-text);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .connection-info i {
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+
+        .typing-indicator {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: var(--light-text);
+            font-style: italic;
+            height: 2rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .message-item {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-container" class="login-container">
+            <h2>Industrial Chat Application</h2>
+            <p style="margin: 1rem 0; color: var(--light-text);">Enter your username to join the conversation</p>
+            <input type="text" id="username-input" class="username-input" placeholder="Your username" />
+            <button id="join-button" class="join-button">Join Chat</button>
+            <p id="error-message" class="error-message"></p>
+        </div>
+
+        <div id="chat-container" class="chat-container">
+            <div class="header">
+                <div>
+                    <h2>Industrial Chat</h2>
+                </div>
+                <div id="welcome-message"></div>
+            </div>
+            <div id="welcome-banner" class="welcome-banner"></div>
+            <div id="online-users" class="online-users">Active users: 1</div>
+            <div id="messages-container" class="messages-container"></div>
+            <div id="typing-indicator" class="typing-indicator"></div>
+            <div class="input-container">
+                <input type="text" id="message-input" class="message-input" placeholder="Type a message..." />
+                <button id="send-button" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="connection-info" class="connection-info">
+        <i class="fas fa-wifi"></i>
+        <span id="connection-text">Connecting...</span>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Connect to the Socket.io server
+        const socket = io();
+        
+        // DOM elements
+        const loginContainer = document.getElementById('login-container');
+        const chatContainer = document.getElementById('chat-container');
+        const usernameInput = document.getElementById('username-input');
+        const joinButton = document.getElementById('join-button');
+        const errorMessage = document.getElementById('error-message');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const welcomeBanner = document.getElementById('welcome-banner');
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const connectionInfo = document.getElementById('connection-text');
+        const onlineUsers = document.getElementById('online-users');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        let currentUser = '';
+        let userCount = 1;
+        let userColors = {};
+        let isTyping = false;
+        let typingTimeout;
+
+        // Generate a random color for user avatars
+        function getRandomColor() {
+            const colors = [
+                '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e',
+                '#16a085', '#27ae60', '#2980b9', '#8e44ad', '#2c3e50',
+                '#f1c40f', '#e67e22', '#e74c3c', '#f39c12', '#d35400'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Get user initials for avatar
+        function getUserInitials(username) {
+            if (!username) return '?';
+            
+            if (username.includes(' ')) {
+                const parts = username.split(' ');
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            
+            return username.substring(0, 2).toUpperCase();
+        }
+
+        // Join chat when button is clicked
+        joinButton.addEventListener('click', function() {
+            const username = usernameInput.value.trim();
+            if (username) {
+                socket.emit('setUserName', username);
+            } else {
+                errorMessage.textContent = "Username cannot be empty";
+                usernameInput.focus();
+            }
+        });
+
+        // Also join when Enter key is pressed in username field
+        usernameInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                joinButton.click();
+            }
+        });
+
+        // Send message when button is clicked
+        sendButton.addEventListener('click', function() {
+            sendMessage();
+        });
+
+        // Also send when Enter key is pressed in message input field
+        messageInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default to avoid line breaks
+                sendMessage();
+            }
+        });
+
+        // Handle typing indicator
+        messageInput.addEventListener('input', function() {
+            if (!isTyping && messageInput.value.trim() !== '') {
+                isTyping = true;
+                // You could emit a 'typing' event here to notify others
+            }
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+                // You could emit a 'stopTyping' event here
+            }, 2000);
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && currentUser) {
+                socket.emit('msg', { message: message, user: currentUser });
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        }
+
+        // Add a message to the chat
+        function addMessage(data, isMine = false) {
+            const messageItem = document.createElement('div');
+            messageItem.className = `message-item ${isMine ? 'sent' : 'received'}`;
+
+            // If new user, assign a color
+            if (!userColors[data.user]) {
+                userColors[data.user] = getRandomColor();
+            }
+
+            // Create message HTML
+            messageItem.innerHTML = `
+                <div class="message-info">
+                    ${!isMine ? `
+                        <div class="user-avatar" style="background-color: ${userColors[data.user]}">
+                            ${getUserInitials(data.user)}
+                        </div>
+                        <span class="username">${data.user}</span>
+                    ` : ''}
+                    <span class="timestamp">${data.time || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div class="message-bubble">
+                    ${data.message}
+                </div>
+            `;
+
+            messagesContainer.appendChild(messageItem);
+            scrollToBottom();
+        }
+
+        // Add a system message
+        function addSystemMessage(text) {
+            const systemMsg = document.createElement('div');
+            systemMsg.className = 'system-message';
+            systemMsg.textContent = text;
+            messagesContainer.appendChild(systemMsg);
+            scrollToBottom();
+        }
+
+        // Scroll to the bottom of the messages container
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Update user count in UI
+        function updateUserCount() {
+            onlineUsers.textContent = `Active users: ${userCount}`;
+        }
+
+        // Socket event handlers
+        socket.on('userExists', function(data) {
+            errorMessage.textContent = data;
+            usernameInput.focus();
+        });
+
+        socket.on('setUser', function(data) {
+            currentUser = data.username;
+            loginContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            welcomeMessage.textContent = currentUser;
+            welcomeBanner.textContent = `Welcome to the chat, ${currentUser}!`;
+            errorMessage.textContent = '';
+            messageInput.focus();
+
+            // Assign color for current user
+            userColors[currentUser] = getRandomColor();
+
+            // Add system message
+            addSystemMessage('You joined the chat');
+        });
+
+        socket.on('userJoined', function(username) {
+            userCount++;
+            updateUserCount();
+            addSystemMessage(`${username} joined the chat`);
+        });
+
+        socket.on('newmsg', function(data) {
+            // Check if message is from current user
+            const isMine = data.user === currentUser;
+            addMessage(data, isMine);
+        });
+
+        socket.on('serverIP', function(data) {
+            connectionInfo.textContent = `Connected to: ${data.ip}:${data.port}`;
+        });
+
+        // Initial focus on username input
+        usernameInput.focus();
+    </script>
+</body>
+</html>
